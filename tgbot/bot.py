@@ -3,11 +3,15 @@ import nest_asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
 from aiogram.types import FSInputFile
-from excel import createExcel
+from .excel import createExcel
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 nest_asyncio.apply()
 
-bot = Bot(token="")
+bot = Bot(token=os.getenv("BOT_TOKEN"))
 
 dp = Dispatcher()
 

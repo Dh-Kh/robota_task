@@ -10,6 +10,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from re import findall
 from typing import Union
 
+#issue with date type sometimes it return str 
+
 class SeleniumRobota(object):
 
     _instance = None
