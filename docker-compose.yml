@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+
+  app:
+    build: ./backend
+    container_name: app
+    volumes:
+      - ./backend:/backend
+    depends_on:
+      - chromedriver
+      - pgdb
+      - redis
+      
+  chromedriver:
+    image: selenium/standalone-chrome
+    ports: 
+      - "4444:4444"
+    shm_size: '512M'  
+    tmpfs:
+      - /dev/shm
+    environment:
+      - SE_NODE_SESSION_TIMEOUT=1000
+
+  pgdb:
+    image: postgres
+    container_name: pgdb
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+      
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - '6380:6380'
+    command: redis-server --port 6380
+
+
+volumes:
+  pgdata:

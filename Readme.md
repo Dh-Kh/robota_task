@@ -4,9 +4,8 @@
 
 Before running this project, ensure that you have the following:
 
-- **Redis**:
-  - Make sure that Redis is installed and running on your machine.
-  - To install Redis, you can follow the official [Redis Installation Guide](https://redis.io/download).
+- **Docker**:
+  - Make sure Docker and Docker Compose are installed on your system.
 
 **Note: This project has been tested on Linux Mint 21.**
 
@@ -23,7 +22,7 @@ The `SeleniumRobota` class is designed as a singleton to manage a single instanc
 
 ### DatabaseRobota Class
 
-The `DatabaseRobota` class is a singleton that manages a SQLite database connection and provides methods for executing tasks (like inserting and updating data) and retrieving data in a consistent and efficient manner.
+The `DatabaseRobota` class is a singleton that manages a postgres database connection and provides methods for executing tasks (like inserting and updating data) and retrieving data in a consistent and efficient manner.
 
 #### Purpose
 
@@ -49,26 +48,32 @@ The Telegram bot setup using `aiogram` for interacting with users and sending Ex
 - Implements a Telegram bot using `aiogram` library to handle commands and interactions.
 - Sends `data.xlsx` Excel file to users upon command request.
 
+### Celery (`celery_app.py`)
+
+This extension enables you to run the periodic tasks every hour.
+
 ### Project Structure
 
 ```bash
 .
-├── database
+├── backend
+│   ├── celery_app.py
+│   ├── database
+│   │   ├── __init__.py
+│   │   └── storage.py
+│   ├── Dockerfile
 │   ├── __init__.py
-│   └── storage.py
-├── data.xlsx
-├── __init__.py
-├── mustage.db
-├── Readme.md
-├── requirements.txt
-├── scheduler_task.py
-├── scraper
-│   ├── __init__.py
-│   └── robota.py
-└── tgbot
-    ├── bot.py
-    ├── excel.py
-    └── __init__.py
+│   ├── requirements.txt
+│   ├── scraper
+│   │   ├── __init__.py
+│   │   └── robota.py
+│   └── tgbot
+│       ├── bot.py
+│       ├── excel.py
+│       └── __init__.py
+├── docker-compose.yml
+└── Readme.md
+
 ```
 
 ### Setup
@@ -77,14 +82,26 @@ The Telegram bot setup using `aiogram` for interacting with users and sending Ex
 ```bash
    git clone https://github.com/Dh-Kh/robota_task.git
 ```
-2. **Create venv and download requirements.txt:**
+2. **Build project:**
 ```bash
-    cd robota_task
-    python3 -m venv venv
-    . venv/bin/activate
-    pip install -r requirements.txt
+    docker-compose build
+    docker-compose up -d
 ```
 3. **Start project:**
 ```bash
-    sh -c "& python3 -m tgbot.bot"
+    docker-compose run app sh -c "celery -A celery_app beat --loglevel=info & python3 -m tgbot.bot"
+```
+
+4. **Start the Bot**: If you haven't already, start the bot by searching for `https://t.me/MustageTestBotBot` on Telegram and clicking on "Start".
+
+5. **Use the Command**: Once the bot is started, open a chat with it and type the following command:
+
+```bash
+    /get_today_statistic 
+```
+
+6. **Useful commands**:
+```bash
+    docker-compose exec pgdb psql -h localhost -U postgres
+    docker-compose down -v
 ```

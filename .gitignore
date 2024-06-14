@@ -4,3 +4,4 @@ __pycache__
 venv
 mustage.db
 data.xlsx
+celerybeat-schedule

@@ -4,13 +4,18 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.chrome.service import Service
+#from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
-from webdriver_manager.chrome import ChromeDriverManager
+#from webdriver_manager.chrome import ChromeDriverManager
 from re import findall
 from typing import Union
+from time import sleep
+import os
+from dotenv import load_dotenv
 
-#issue with date type sometimes it return str 
+load_dotenv()
+
+SELENIUM_URL = os.getenv("SELENIUM_URL")
 
 class SeleniumRobota(object):
 
@@ -20,10 +25,10 @@ class SeleniumRobota(object):
         if not cls._instance:
             cls._instance = super(SeleniumRobota, cls).__new__(cls, *args, **kwargs)
             options = Options()
-            options.add_argument('--headless=new')
+            options.add_argument('--headless')
             options.add_argument("--no-sandbox")
-            cls._instance._driver = webdriver.Chrome(
-                service=Service(ChromeDriverManager().install()),
+            cls._instance._driver = webdriver.Remote(
+                command_executor=SELENIUM_URL,
                 options=options
             )
         return cls._instance
@@ -33,16 +38,15 @@ class SeleniumRobota(object):
         self._driver.get(url)   
 
         try:
-            wait = WebDriverWait(self._driver, 5)
+            wait = WebDriverWait(self._driver, 10)
             input_field = wait.until(
-                EC.visibility_of_element_located(
+                EC.presence_of_element_located(
                     (By.XPATH, '//input[@_ngcontent-app-desktop-c77]')
                 )
             )
             input_field.clear()
             input_field.send_keys(key_word)
             input_field.send_keys(Keys.ENTER)
-            
             count = wait.until(
                 EC.presence_of_element_located(
                     (By.XPATH, '//div[@_ngcontent-app-desktop-c128]')
@@ -55,4 +59,9 @@ class SeleniumRobota(object):
             return "TimeoutException"
         finally:
             self._driver.close()
-            
+
+
+#s = SeleniumRobota()
+#amount = s.parser("https://robota.ua/", "junior")
+#print(amount)
+#print(isinstance(amount, int))

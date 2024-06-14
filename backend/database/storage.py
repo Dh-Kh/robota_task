@@ -1,5 +1,22 @@
 from typing import Union, List
-import sqlite3
+import psycopg2
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+
+"""
+Note!!! SQLITE3 database getting locked Celery
+database that has better support for multiple connections such as postgres or mysql, 
+sqlite really isn't built up to do it and is more used for development where its very rare 
+you'd have multiple concurrent connections
+"""
+
 
 class DatabaseRobota(object):
     
@@ -8,7 +25,12 @@ class DatabaseRobota(object):
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(DatabaseRobota, cls).__new__(cls, *args, **kwargs)
-            cls._instance._connection = sqlite3.connect("mustage.db")
+            cls._instance._connection = psycopg2.connect(
+                dbname=DB_NAME, 
+                user=DB_USER, 
+                password=DB_PASSWORD,
+                host=DB_HOST
+            )
         return cls._instance
     
     def execute_task(self, price: int) -> Union[None, str]:
@@ -16,7 +38,6 @@ class DatabaseRobota(object):
         if not isinstance(price, int):
             raise ValueError(f"Incorrect date type {price}")
             
-        
         try:
             with self._connection:
                 cursor = self._connection.cursor()
@@ -24,17 +45,17 @@ class DatabaseRobota(object):
                 cursor.execute(
                     """
                     CREATE TABLE IF NOT EXISTS Robota (
-                        id INTEGER PRIMARY KEY,
-                        vacancy_count INTEGER DEFAULT 0,
-                        change INTEGER DEFAULT 0,
-                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                        id SERIAL PRIMARY KEY,
+                        vacancy_count INTEGER,
+                        change INTEGER,
+                        timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
                     )
                     """
                 )
                 
                 cursor.execute(
                     """
-                    INSERT INTO Robota (vacancy_count) VALUES (?)
+                    INSERT INTO Robota (vacancy_count) VALUES (%s)
                     """, (price,)
                 )
                 
@@ -52,7 +73,7 @@ class DatabaseRobota(object):
                     cursor.execute(
                         """
                         SELECT vacancy_count FROM Robota
-                        WHERE id < ?
+                        WHERE id < %s
                         ORDER BY id DESC
                         LIMIT 1
                         """, (current_id,)
@@ -65,15 +86,15 @@ class DatabaseRobota(object):
 
                         cursor.execute(
                             """
-                            UPDATE Robota SET change = ?
-                            WHERE id = ?
+                            UPDATE Robota SET change = %s
+                            WHERE id = %s
                             """, (change, current_id)
                         )
 
             self._connection.commit()
             
-        except sqlite3.Error as e:
-            return str(e)
+        except psycopg2.Error as e:
+            raise str(e)
 
         return None
 
@@ -85,12 +106,11 @@ class DatabaseRobota(object):
                 cursor.execute(
                     """
                     SELECT vacancy_count, change, 
-                    strftime('%d.%m.%Y %H:%M:%S', timestamp) as formatted_timestamp 
+                    to_char(timestamp, 'DD.MM.YYYY HH24:MI:SS') as formatted_timestamp 
                     FROM Robota
                     """
                 )
                 rows = cursor.fetchall()
                 return rows
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             return str(e)
-        
