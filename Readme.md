@@ -11,23 +11,33 @@ Before running this project, ensure that you have the following:
 
 ## Key Features
 
-### SeleniumRobota Class
+# SeleniumRobota and DatabaseRobota
 
-The `SeleniumRobota` class is designed as a singleton to manage a single instance of a Selenium WebDriver, ensuring efficient handling and preventing multiple browser instances from running concurrently.
+This project includes two classes, `SeleniumRobota` and `DatabaseRobota`, which handle web automation and database operations respectively.
 
-#### Purpose
+## SeleniumRobota Class
 
-- Manages a single instance of the Selenium WebDriver (`_driver`) throughout the application.
-- Prevents the overhead and potential conflicts of multiple WebDriver instances when performing web automation tasks.
+The `SeleniumRobota` class manages a Selenium WebDriver instance to perform web automation tasks efficiently.
 
-### DatabaseRobota Class
+### Purpose
 
-The `DatabaseRobota` class is a singleton that manages a postgres database connection and provides methods for executing tasks (like inserting and updating data) and retrieving data in a consistent and efficient manner.
+- **WebDriver Management**: Initializes and manages a Selenium WebDriver instance.
+- **Web Automation**: Navigates to URLs, interacts with web elements, and extracts data.
+- **Headless Operation**: Runs the browser in headless mode for efficiency
 
 #### Purpose
 
 - Ensures only one instance of the database connection (`_connection`) exists at any time.
 - Handles database operations (e.g., create table, insert data, update records) with proper error handling to maintain data integrity.
+
+## DatabaseRobota Class
+The DatabaseRobota class manages a PostgreSQL database connection, providing methods for executing database tasks such as inserting and updating data, and retrieving records.
+
+#### Purpose
+
+- Database Connection Management: Establishes and maintains a PostgreSQL database connection.
+- Data Operations: Handles creation of tables, data insertion, and record updates.
+- Data Integrity: Ensures data consistency and integrity through robust error handling and transactions.
 
 ### Excel Module (`excel.py`)
 
@@ -57,7 +67,7 @@ This extension enables you to run the periodic tasks every hour.
 ```bash
 .
 ├── backend
-│   ├── celery_app.py
+│   ├── celeryconfig.py
 │   ├── database
 │   │   ├── __init__.py
 │   │   └── storage.py
@@ -67,12 +77,14 @@ This extension enables you to run the periodic tasks every hour.
 │   ├── scraper
 │   │   ├── __init__.py
 │   │   └── robota.py
+│   ├── tasks.py
 │   └── tgbot
 │       ├── bot.py
 │       ├── excel.py
 │       └── __init__.py
 ├── docker-compose.yml
 └── Readme.md
+
 
 ```
 
@@ -89,7 +101,7 @@ This extension enables you to run the periodic tasks every hour.
 ```
 3. **Start project:**
 ```bash
-    docker-compose run app sh -c "celery -A celery_app beat --loglevel=info & python3 -m tgbot.bot"
+    docker-compose run app sh -c "celery -A tasks worker --loglevel=info --beat & python3 -m tgbot.bot"
 ```
 
 4. **Start the Bot**: If you haven't already, start the bot by searching for `https://t.me/MustageTestBotBot` on Telegram and clicking on "Start".

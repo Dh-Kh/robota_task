@@ -20,18 +20,14 @@ you'd have multiple concurrent connections
 
 class DatabaseRobota(object):
     
-    _instance = None
+    def __init__(self):
+        self._connection = psycopg2.connect(
+            dbname=DB_NAME, 
+            user=DB_USER, 
+            password=DB_PASSWORD,
+            host=DB_HOST
+        )
     
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super(DatabaseRobota, cls).__new__(cls, *args, **kwargs)
-            cls._instance._connection = psycopg2.connect(
-                dbname=DB_NAME, 
-                user=DB_USER, 
-                password=DB_PASSWORD,
-                host=DB_HOST
-            )
-        return cls._instance
     
     def execute_task(self, price: int) -> Union[None, str]:
         
@@ -46,8 +42,8 @@ class DatabaseRobota(object):
                     """
                     CREATE TABLE IF NOT EXISTS Robota (
                         id SERIAL PRIMARY KEY,
-                        vacancy_count INTEGER,
-                        change INTEGER,
+                        vacancy_count INTEGER, 
+                        change INTEGER DEFAULT 0,
                         timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
                     )
                     """
